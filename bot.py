@@ -54,4 +54,4 @@ async def scripts(ctx):
     view = ScriptButtons()
     await ctx.send(embed=embed, view=view)
 
-bot.run("MTQwNzQzODE3NjQxODY2MDM1NA.GuhBJE.HlhM_0EsFPgGBErNBS1IBqx8_dVNUFRxkjtcb8")
+bot.run("")
