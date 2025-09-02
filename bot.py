@@ -27,7 +27,7 @@ class ScriptButtons(discord.ui.View):
     async def ar2(self, interaction: discord.Interaction, button: discord.ui.Button):
         embed = discord.Embed(
             title="Here your AR2 Script",
-            description="```lua\nprint(\"coming soon\")\n```",
+            description="```lua\nloadstring(game:HttpGet(\"https://raw.githubusercontent.com/UnicoreRoblox/Unicore/refs/heads/main/Apocalypse%20Rising%202.lua\"))()\n```",
             color=0x2b2d31
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
