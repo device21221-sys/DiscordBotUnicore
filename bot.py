@@ -9,15 +9,16 @@ intents.message_content = True
 bot = commands.Bot(command_prefix="?", intents=intents)
 
 # Channel IDs (replace with your real ones)
-RULES_CHANNEL_ID = 1351689723369754634
-INFO_CHANNEL_ID = 1351690459923349634
-SUPPORT_CHANNEL_ID = 1411789053921202286
-EXECUTORS_CHANNEL_ID = 1404173340125429792
+RULES_CHANNEL_ID = 123456789012345678
+INFO_CHANNEL_ID = 123456789012345678
+SUPPORT_CHANNEL_ID = 123456789012345678
+EXECUTORS_CHANNEL_ID = 123456789012345678
 
 @bot.event
 async def on_ready():
     await bot.tree.sync()
-    print(f"✅ Bot {bot.user} is online and slash commands synced!")
+    print(f"✅ Logged in as {bot.user}")
+    print("✅ Slash commands synced!")
 
 # ---------------- Slash Commands ----------------
 
@@ -74,6 +75,19 @@ async def support_executors(interaction: discord.Interaction):
     else:
         await interaction.response.send_message("❌ Executors channel not found.", ephemeral=True)
 
+@bot.tree.command(name="help", description="Show all available commands")
+async def help(interaction: discord.Interaction):
+    help_text = """
+**📌 Available Commands:**
+- `/get_ar2_script` → Get the AR2 script
+- `/get_universal_script` → Get the universal script
+- `/rules` → Rules channel
+- `/info` → Info channel
+- `/support` → Support channel
+- `/support_executors` → Executors support channel
+"""
+    await interaction.response.send_message(help_text)
+    
 # ---------------- Legacy Command (?scripts) ----------------
 @bot.command(name="scripts")
 async def scripts(ctx):
@@ -88,7 +102,7 @@ async def scripts(ctx):
 
     # Button for Universal Script
     async def universal_callback(interaction: discord.Interaction):
-        script = '```lua\nloadstring(game:HttpGet("https://raw.githubusercontent.com/NightFallScript/Unicore/refs/heads/main/Universal.lua"))()\n```'
+        script = '```lua\nloadstring(game:HttpGet("https://raw.githubusercontent.com/NightFallScript/Unicore/refs/heads/main/DoorsUnicore"))()\n```'
         await interaction.response.send_message(script, ephemeral=True)
 
     universal_button = discord.ui.Button(label="📜 Get Universal Script", style=discord.ButtonStyle.secondary)
