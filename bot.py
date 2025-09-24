@@ -8,20 +8,19 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="?", intents=intents)
 
-# Channel IDs (replace with your real ones)
+# ================== Channel IDs (replace with your real ones) ==================
 RULES_CHANNEL_ID = 123456789012345678
 INFO_CHANNEL_ID = 123456789012345678
 SUPPORT_CHANNEL_ID = 123456789012345678
 EXECUTORS_CHANNEL_ID = 123456789012345678
 
+# ================== Events ==================
 @bot.event
 async def on_ready():
     await bot.tree.sync()
-    print(f"✅ Logged in as {bot.user}")
-    print("✅ Slash commands synced!")
+    print(f"✅ Bot {bot.user} is online and slash commands synced!")
 
-# ---------------- Slash Commands ----------------
-
+# ================== Slash Commands ==================
 @bot.tree.command(name="get_ar2_script", description="Get the AR2 Script")
 async def get_ar2_script(interaction: discord.Interaction):
     script = '```lua\nloadstring(game:HttpGet("https://raw.githubusercontent.com/UnicoreRoblox/Unicore/refs/heads/main/ApocalypseRising2.luau"))()\n```'
@@ -75,20 +74,7 @@ async def support_executors(interaction: discord.Interaction):
     else:
         await interaction.response.send_message("❌ Executors channel not found.", ephemeral=True)
 
-@bot.tree.command(name="help", description="Show all available commands")
-async def help(interaction: discord.Interaction):
-    help_text = """
-**📌 Available Commands:**
-- `/get_ar2_script` → Get the AR2 script
-- `/get_universal_script` → Get the universal script
-- `/rules` → Rules channel
-- `/info` → Info channel
-- `/support` → Support channel
-- `/support_executors` → Executors support channel
-"""
-    await interaction.response.send_message(help_text)
-    
-# ---------------- Legacy Command (?scripts) ----------------
+# ================== Legacy Panel (?scripts) ==================
 @bot.command(name="scripts")
 async def scripts(ctx):
     embed = discord.Embed(
@@ -120,6 +106,6 @@ async def scripts(ctx):
 
     await ctx.send(embed=embed, view=view)
 
-# ---------------- Run ----------------
+# ================== Run ==================
 keep_alive()
 bot.run(os.getenv("TOKEN"))
