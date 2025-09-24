@@ -1,62 +1,111 @@
 import discord
+from discord import app_commands
 from discord.ext import commands
-from datetime import datetime
 import os
-
-# Підключаємо keep_alive
 from keep_alive import keep_alive  
 
 intents = discord.Intents.default()
 intents.message_content = True
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix="?", intents=intents)
 
-class ScriptButtons(discord.ui.View):
-    def __init__(self):
-        super().__init__(timeout=None)
-
-    @discord.ui.button(label="📜 Get Universal Script", style=discord.ButtonStyle.secondary)
-    async def universal(self, interaction: discord.Interaction, button: discord.ui.Button):
-        embed = discord.Embed(
-            title="Here your Universal Script",
-            description="```lua\nloadstring(game:HttpGet(\"https://raw.githubusercontent.com/UnicoreRoblox/Unicore/refs/heads/main/Universal\"))()\n```",
-            color=0x2b2d31
-        )
-        await interaction.response.send_message(embed=embed, ephemeral=True)
-
-    @discord.ui.button(label="📜 Get AR2 Script", style=discord.ButtonStyle.secondary)
-    async def ar2(self, interaction: discord.Interaction, button: discord.ui.Button):
-        embed = discord.Embed(
-            title="Here your AR2 Script",
-            description="```lua\nloadstring(game:HttpGet(\"https://raw.githubusercontent.com/UnicoreRoblox/Unicore/refs/heads/main/Apocalypse%20Rising%202.lua\"))()\n```",
-            color=0x2b2d31
-        )
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+# Channel IDs (replace with your real ones)
+RULES_CHANNEL_ID = 123456789012345678
+INFO_CHANNEL_ID = 123456789012345678
+SUPPORT_CHANNEL_ID = 123456789012345678
+EXECUTORS_CHANNEL_ID = 123456789012345678
 
 @bot.event
 async def on_ready():
-    print(f"✅ Bot {bot.user} запущений!")
+    await bot.tree.sync()
+    print(f"✅ Bot {bot.user} is online and slash commands synced!")
 
-@bot.command()
+# ---------------- Slash Commands ----------------
+
+@bot.tree.command(name="get_ar2_script", description="Get the AR2 Script")
+async def get_ar2_script(interaction: discord.Interaction):
+    script = '```lua\nloadstring(game:HttpGet("https://raw.githubusercontent.com/UnicoreRoblox/Unicore/refs/heads/main/ApocalypseRising2.luau"))()\n```'
+    await interaction.response.send_message(script, ephemeral=True)
+
+@bot.tree.command(name="get_universal_script", description="Get the Universal Script")
+async def get_universal_script(interaction: discord.Interaction):
+    script = '```lua\nloadstring(game:HttpGet("https://raw.githubusercontent.com/NightFallScript/Unicore/refs/heads/main/DoorsUnicore"))()\n```'
+    await interaction.response.send_message(script, ephemeral=True)
+
+@bot.tree.command(name="rules", description="Link to rules channel")
+async def rules(interaction: discord.Interaction):
+    channel = bot.get_channel(RULES_CHANNEL_ID)
+    if channel:
+        await interaction.response.send_message(f"📜 Rules are here: {channel.mention}", ephemeral=True)
+    else:
+        await interaction.response.send_message("❌ Rules channel not found.", ephemeral=True)
+
+@bot.tree.command(name="info", description="Link to info channel")
+async def info(interaction: discord.Interaction):
+    channel = bot.get_channel(INFO_CHANNEL_ID)
+    if channel:
+        await interaction.response.send_message(f"ℹ️ Info is here: {channel.mention}", ephemeral=True)
+    else:
+        await interaction.response.send_message("❌ Info channel not found.", ephemeral=True)
+
+@bot.tree.command(name="help", description="List all available commands")
+async def help_command(interaction: discord.Interaction):
+    embed = discord.Embed(title="📖 Command List", color=0x2b2d31)
+    embed.add_field(name="/get_ar2_script", value="Get AR2 Script", inline=False)
+    embed.add_field(name="/get_universal_script", value="Get Universal Script", inline=False)
+    embed.add_field(name="/rules", value="Show rules channel", inline=False)
+    embed.add_field(name="/info", value="Show info channel", inline=False)
+    embed.add_field(name="/support", value="Show support channel", inline=False)
+    embed.add_field(name="/support_executors", value="Show executors channel", inline=False)
+    await interaction.response.send_message(embed=embed, ephemeral=True)
+
+@bot.tree.command(name="support", description="Link to support channel")
+async def support(interaction: discord.Interaction):
+    channel = bot.get_channel(SUPPORT_CHANNEL_ID)
+    if channel:
+        await interaction.response.send_message(f"🛠️ Support is here: {channel.mention}", ephemeral=True)
+    else:
+        await interaction.response.send_message("❌ Support channel not found.", ephemeral=True)
+
+@bot.tree.command(name="support_executors", description="Link to executors channel")
+async def support_executors(interaction: discord.Interaction):
+    channel = bot.get_channel(EXECUTORS_CHANNEL_ID)
+    if channel:
+        await interaction.response.send_message(f"⚙️ Executors are here: {channel.mention}", ephemeral=True)
+    else:
+        await interaction.response.send_message("❌ Executors channel not found.", ephemeral=True)
+
+# ---------------- Legacy Command (?scripts) ----------------
+@bot.command(name="scripts")
 async def scripts(ctx):
-    now = datetime.now().strftime("%d/%m/%Y %I:%M:%S %p")
-
     embed = discord.Embed(
         title="📜 Script Panel",
         description="This script panel is for the project : **Unicore**\n\n"
-                    "Use the buttons below to Get Universal Script, Get AR2 Script",
+                    "Use the buttons below to get Universal Script or AR2 Script",
         color=0x2b2d31
     )
 
-    embed.set_footer(
-        text=f"Sent by {ctx.author.display_name} • {now}",
-        icon_url=ctx.author.avatar.url if ctx.author.avatar else ctx.author.default_avatar.url
-    )
+    view = discord.ui.View()
 
-    view = ScriptButtons()
+    # Button for Universal Script
+    async def universal_callback(interaction: discord.Interaction):
+        script = '```lua\nloadstring(game:HttpGet("https://raw.githubusercontent.com/NightFallScript/Unicore/refs/heads/main/Universal.lua"))()\n```'
+        await interaction.response.send_message(script, ephemeral=True)
+
+    universal_button = discord.ui.Button(label="📜 Get Universal Script", style=discord.ButtonStyle.secondary)
+    universal_button.callback = universal_callback
+    view.add_item(universal_button)
+
+    # Button for AR2 Script
+    async def ar2_callback(interaction: discord.Interaction):
+        script = '```lua\nloadstring(game:HttpGet("https://raw.githubusercontent.com/UnicoreRoblox/Unicore/refs/heads/main/ApocalypseRising2.luau"))()\n```'
+        await interaction.response.send_message(script, ephemeral=True)
+
+    ar2_button = discord.ui.Button(label="📜 Get AR2 Script", style=discord.ButtonStyle.secondary)
+    ar2_button.callback = ar2_callback
+    view.add_item(ar2_button)
+
     await ctx.send(embed=embed, view=view)
 
-# Запускаємо веб-сервер для keep_alive
+# ---------------- Run ----------------
 keep_alive()
-
-# Запуск бота
 bot.run(os.getenv("TOKEN"))
