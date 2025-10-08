@@ -4,30 +4,30 @@ from discord.ext import commands
 import os
 import random
 import string
-from keep_alive import keep_alive  
+from keep_alive import keep_alive, add_key  
 
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 bot = commands.Bot(command_prefix="?", intents=intents)
 
-# ================== Channel IDs (заміни на свої) ==================
+# ================== Channel IDs ==================
 RULES_CHANNEL_ID = 1351689723369754634
 INFO_CHANNEL_ID = 1351690459923349634
 SUPPORT_CHANNEL_ID = 1411789053921202286
 EXECUTORS_CHANNEL_ID = 1404173340125429792
 
-# ================== Role Names (для доступу) ==================
+# ================== Role Names ==================
 STAFF_ROLE_NAME = "Staff Team"
 NEXUS_ROLE_NAME = "NexusVision Team"
 
-# ================== Події ==================
+# ================== Events ==================
 @bot.event
 async def on_ready():
     await bot.tree.sync()
-    print(f"✅ Bot {bot.user} is online and slash commands synced!")
+    print(f"✅ Bot {bot.user} is online and slash commands are synced!")
 
-# ================== Slash-команди ==================
+# ================== Slash Commands ==================
 @bot.tree.command(name="get_ar2_script", description="Get the AR2 Script")
 async def get_ar2_script(interaction: discord.Interaction):
     script = '```lua\nloadstring(game:HttpGet("https://raw.githubusercontent.com/UnicoreRoblox/Unicore/refs/heads/main/ApocalypseRising2.luau"))()\n```'
@@ -38,7 +38,7 @@ async def get_universal_script(interaction: discord.Interaction):
     script = '```lua\nloadstring(game:HttpGet("https://raw.githubusercontent.com/NightFallScript/Unicore/refs/heads/main/DoorsUnicore"))()\n```'
     await interaction.response.send_message(script, ephemeral=True)
 
-@bot.tree.command(name="rules", description="Link to rules channel")
+@bot.tree.command(name="rules", description="Show the rules channel")
 async def rules(interaction: discord.Interaction):
     channel = bot.get_channel(RULES_CHANNEL_ID)
     if channel:
@@ -46,7 +46,7 @@ async def rules(interaction: discord.Interaction):
     else:
         await interaction.response.send_message("❌ Rules channel not found.", ephemeral=True)
 
-@bot.tree.command(name="info", description="Link to info channel")
+@bot.tree.command(name="info", description="Show the info channel")
 async def info(interaction: discord.Interaction):
     channel = bot.get_channel(INFO_CHANNEL_ID)
     if channel:
@@ -54,7 +54,7 @@ async def info(interaction: discord.Interaction):
     else:
         await interaction.response.send_message("❌ Info channel not found.", ephemeral=True)
 
-@bot.tree.command(name="support", description="Link to support channel")
+@bot.tree.command(name="support", description="Show the support channel")
 async def support(interaction: discord.Interaction):
     channel = bot.get_channel(SUPPORT_CHANNEL_ID)
     if channel:
@@ -62,7 +62,7 @@ async def support(interaction: discord.Interaction):
     else:
         await interaction.response.send_message("❌ Support channel not found.", ephemeral=True)
 
-@bot.tree.command(name="support_executors", description="Link to executors channel")
+@bot.tree.command(name="support_executors", description="Show the executors channel")
 async def support_executors(interaction: discord.Interaction):
     channel = bot.get_channel(EXECUTORS_CHANNEL_ID)
     if channel:
@@ -79,57 +79,60 @@ async def help_command(interaction: discord.Interaction):
     embed.add_field(name="/info", value="Show info channel", inline=False)
     embed.add_field(name="/support", value="Show support channel", inline=False)
     embed.add_field(name="/support_executors", value="Show executors channel", inline=False)
-    embed.add_field(name="/changerole", value="Change user roles (Staff/Nexus only)", inline=False)
-    embed.add_field(name="/generatekey", value="Generate key (Nexus only)", inline=False)
+    embed.add_field(name="/changerole", value="Add or remove a role from a member", inline=False)
+    embed.add_field(name="/generatekey", value="Generate a new key (NexusVision only)", inline=False)
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
 # ================== /changerole ==================
-@bot.tree.command(name="changerole", description="Змінити роль користувача (тільки для Staff Team та NexusVision Team)")
+@bot.tree.command(name="changerole", description="Add or remove a role from a user (Staff/Nexus only)")
 @app_commands.describe(
-    member="Користувач, якому хочеш змінити роль",
-    role="Роль, яку хочеш видати або забрати"
+    member="User to modify",
+    role="Role to give or remove"
 )
 async def changerole(interaction: discord.Interaction, member: discord.Member, role: discord.Role):
     if not any(r.name in [STAFF_ROLE_NAME, NEXUS_ROLE_NAME] for r in interaction.user.roles):
-        await interaction.response.send_message("❌ У тебе немає доступу до цієї команди.", ephemeral=True)
+        await interaction.response.send_message("❌ You do not have permission to use this command.", ephemeral=True)
         return
 
     if role in member.roles:
         await member.remove_roles(role)
-        await interaction.response.send_message(f"✅ Роль {role.mention} **знято** з {member.mention}.", ephemeral=True)
+        await interaction.response.send_message(f"✅ Removed {role.mention} from {member.mention}.", ephemeral=True)
     else:
         await member.add_roles(role)
-        await interaction.response.send_message(f"✅ Роль {role.mention} **видано** {member.mention}.", ephemeral=True)
+        await interaction.response.send_message(f"✅ Added {role.mention} to {member.mention}.", ephemeral=True)
 
 # ================== /generatekey ==================
-@bot.tree.command(name="generatekey", description="Генерує ключ доступу (тільки NexusVision Team)")
+@bot.tree.command(name="generatekey", description="Generate a new access key (NexusVision only)")
 @app_commands.describe(
-    active="Чи активний ключ (True/False)",
-    days="На скільки днів (7, 30, 90, 100000)"
+    active="Whether the key is active (True/False)",
+    days="How many days it's valid (7, 30, 90, 100000)"
 )
 async def generatekey(interaction: discord.Interaction, active: bool, days: int):
     if not any(r.name == NEXUS_ROLE_NAME for r in interaction.user.roles):
-        await interaction.response.send_message("❌ Ти не маєш доступу до цієї команди.", ephemeral=True)
+        await interaction.response.send_message("❌ You do not have permission to use this command.", ephemeral=True)
         return
 
     if days not in [7, 30, 90, 100000]:
-        await interaction.response.send_message("❌ Невірна кількість днів. Використовуй: 7, 30, 90 або 100000.", ephemeral=True)
+        await interaction.response.send_message("❌ Invalid duration. Use 7, 30, 90, or 100000.", ephemeral=True)
         return
 
-    # Генерація ключа: 4 блоки по 4 великі букви
+    # Generate key
     key = "-".join(
         "".join(random.choices(string.ascii_uppercase + string.digits, k=4))
         for _ in range(4)
     )
 
+    # Add key to Flask API
+    add_key(key, active, days)
+
     embed = discord.Embed(
-        title="🔑 Згенеровано ключ",
+        title="🔑 Key Generated",
         color=0x00ff88
     )
-    embed.add_field(name="Ключ", value=f"```{key}```", inline=False)
-    embed.add_field(name="Активний", value=str(active), inline=True)
-    embed.add_field(name="Дійсний (днів)", value=str(days), inline=True)
-    embed.set_footer(text=f"Запросив: {interaction.user}", icon_url=interaction.user.display_avatar.url)
+    embed.add_field(name="Key", value=f"```{key}```", inline=False)
+    embed.add_field(name="Active", value=str(active), inline=True)
+    embed.add_field(name="Valid Days", value=str(days), inline=True)
+    embed.set_footer(text=f"Generated by {interaction.user}", icon_url=interaction.user.display_avatar.url)
 
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -138,8 +141,8 @@ async def generatekey(interaction: discord.Interaction, active: bool, days: int)
 async def scripts(ctx):
     embed = discord.Embed(
         title="📜 Script Panel",
-        description="This script panel is for the project : **Unicore**\n\n"
-                    "Use the buttons below to get Universal Script or AR2 Script",
+        description="This script panel is for the project: **Unicore**\n\n"
+                    "Use the buttons below to get Universal Script or AR2 Script.",
         color=0x2b2d31
     )
 
@@ -163,6 +166,6 @@ async def scripts(ctx):
 
     await ctx.send(embed=embed, view=view)
 
-# ================== Запуск ==================
+# ================== Run Bot ==================
 keep_alive()
 bot.run(os.getenv("TOKEN"))
