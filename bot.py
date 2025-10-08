@@ -12,7 +12,7 @@ from discord.ext import commands
 from flask import Flask, request, jsonify
 
 # ================= CONFIG =================
-GUILD_ID = 123456789012345678  # <-- Replace with your actual Discord server ID
+GUILD_ID = 1344670393092280481  # <-- Replace with your actual Discord server ID
 
 TOKEN = os.getenv("TOKEN")  # Bot token from Render environment
 ADMIN_API_KEY = os.getenv("ADMIN_API_KEY", "change_this_secret")
