@@ -1,26 +1,17 @@
-from flask import Flask, jsonify
+from flask import Flask
+from threading import Thread
 
-app = Flask(__name__)
-
-# Тут бот зберігає всі ключі
-keys_data = []
+app = Flask('')
 
 @app.route('/')
 def home():
-    return "✅ NexusVision API running"
+    return "✅ Bot is running!", 200
 
-@app.route('/keys')
-def get_keys():
-    return jsonify(keys_data)
-
-def add_key(key, active, days):
-    keys_data.append({
-        "key": key,
-        "active": active,
-        "days": days
-    })
+def run():
+    # Flask буде працювати на порту Render/Replit
+    app.run(host='0.0.0.0', port=8080)
 
 def keep_alive():
-    from threading import Thread
-    t = Thread(target=lambda: app.run(host='0.0.0.0', port=8080))
+    # Запуск Flask у фоновому потоці, щоб бот не падав
+    t = Thread(target=run)
     t.start()
