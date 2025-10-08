@@ -1,2 +1,2 @@
-discord.py
-keep_alive
+discord.py==2.4.0
+Flask==3.0.3
