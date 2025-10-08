@@ -1,5 +1,3 @@
-discord.py==2.4.0
-flask
-keep_alive
-aiohttp
-requests
+discord.py==2.3.2
+Flask==3.0.3
+python-dotenv==1.0.1
