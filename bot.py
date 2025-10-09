@@ -53,7 +53,7 @@ async def on_message(message: discord.Message):
         # Embed у тому ж стилі, що на скріні
         embed = discord.Embed(
             description=f"**⚠️ {name} is not supported!**\n**Go to {channel.mention}!**",
-            color=00aaff  # червоний акцент
+            color=0x57A5FF  # голубий колір
         )
 
         # Відправлення без дубляжу
