@@ -25,9 +25,8 @@ async def on_message(message: discord.Message):
     if message.author.bot:
         return  # ігнор ботів
 
-    # ключові слова (у нижньому регістрі)
     content = message.content.lower()
-    if any(word in content for word in ["solara", "jjsploit", "xeno", "Solara", "JJSploit", "Xeno"]):
+    if any(word in content for word in ["solara", "jjsploit", "xeno", "Solara", "Xeno", "JJSploit"]):
         try:
             await message.delete()
         except discord.Forbidden:
@@ -35,18 +34,21 @@ async def on_message(message: discord.Message):
 
         channel = bot.get_channel(EXECUTORS_CHANNEL_ID)
         if channel:
-            # визначаємо яке саме слово
+            # Визначаємо яке саме слово і робимо embed
             if "solara" in content:
-                response = f"⚠️ Solara is not supported, go to {channel.mention}"
+                title = "Solara is not supported!"
             elif "jjsploit" in content:
-                response = f"⚠️ JJSploit is not supported, go to {channel.mention}"
+                title = "JJSploit is not supported!"
             elif "xeno" in content:
-                response = f"⚠️ Xeno is not supported, go to {channel.mention}"
+                title = "Xeno is not supported!"
             else:
-                response = f"⚠️ That executor is not supported, go to {channel.mention}"
+                title = "That executor is not supported!"
 
-            await message.channel.send(response, delete_after=10)
-
+            embed = discord.Embed(
+                description=f"**{title}**\nGo to {channel.mention}!",
+                color=0x2b2d31  # темно-сірий стиль, як на скріні
+            )
+            await message.channel.send(embed=embed, delete_after=10)
     # обов’язково, щоб працювали команди
     await bot.process_commands(message)
 
