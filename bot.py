@@ -5,7 +5,7 @@ import os
 from keep_alive import keep_alive
 
 # ================== CONFIG ==================
-GUILD_ID = 1344670393092280481  # заміни на ID твого сервера
+GUILD_ID = 1344670393092280481  # твій сервер
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -17,7 +17,7 @@ RULES_CHANNEL_ID = 1351689723369754634
 INFO_CHANNEL_ID = 1425554175231529054
 SUPPORT_CHANNEL_ID = 1411789053921202286
 EXECUTORS_CHANNEL_ID = 1404173340125429792
-LOG_CHANNEL_ID = None  # буде встановлюватись через /setchanel-logs
+LOG_CHANNEL_ID = None  # встановлюється через /setchanel_logs
 
 # ================== Admin Data ==================
 admin_roles = ["Staff Team", "NexusVision Team"]
@@ -42,21 +42,29 @@ def create_embed(title=None, description=None, color=0x2b2d31):
         embed.title = title
     if description:
         embed.description = description
+    embed.set_footer(text="⚙️ Powered by Unicore", icon_url=bot.user.avatar.url if bot.user and bot.user.avatar else discord.Embed.Empty)
     return embed
 
 # ================== Events ==================
 @bot.event
 async def on_ready():
     guild = discord.Object(id=GUILD_ID)
-    await bot.tree.sync(guild=guild)
-    print(f"✅ Bot {bot.user} is online and commands synced for guild {GUILD_ID}!")
+    try:
+        # 🔥 очистка старих дублікатів команд
+        bot.tree.clear_commands(guild=guild)
+        await bot.tree.sync(guild=guild)
+        print(f"✅ Synced & cleaned all commands for guild {GUILD_ID}!")
+    except Exception as e:
+        print(f"⚠️ Sync error: {e}")
+
+    print(f"🤖 Bot {bot.user} is now online!")
 
 @bot.event
 async def on_message(message: discord.Message):
     if message.author.bot:
         return
 
-    blocked_words = ["solara", "xeno", "jjsploit"]
+    blocked_words = ["solara", "xeno", "jjsploit", "Solara", "Xeno", "JJSploit"]
     if any(word in message.content.lower() for word in blocked_words):
         try:
             await message.delete()
@@ -64,15 +72,7 @@ async def on_message(message: discord.Message):
             pass
 
         channel = bot.get_channel(EXECUTORS_CHANNEL_ID)
-        lower_content = message.content.lower()
-        if "solara" in lower_content:
-            name = "Solara"
-        elif "xeno" in lower_content:
-            name = "Xeno"
-        elif "jjsploit" in lower_content:
-            name = "JJSploit"
-        else:
-            name = "Executor"
+        name = next((n.capitalize() for n in blocked_words if n in message.content.lower()), "Executor")
 
         embed = create_embed(
             description=f"❌ **{name} is not supported!**\nPlease go to {channel.mention} for help.",
@@ -87,42 +87,36 @@ async def on_message(message: discord.Message):
 @bot.tree.command(name="get_ar2_script", description="Get the AR2 Script", guild=discord.Object(id=GUILD_ID))
 async def get_ar2_script(interaction: discord.Interaction):
     script = "```lua\nloadstring(game:HttpGet('https://raw.githubusercontent.com/UnicoreRoblox/Unicore/refs/heads/main/ApocalypseRising2.luau'))()\n```"
-    embed = create_embed("📜 AR2 Script", script)
-    await interaction.response.send_message(embed=embed, ephemeral=True)
+    await interaction.response.send_message(embed=create_embed("📜 AR2 Script", script), ephemeral=True)
 
 @bot.tree.command(name="get_universal_script", description="Get the Universal Script", guild=discord.Object(id=GUILD_ID))
 async def get_universal_script(interaction: discord.Interaction):
     script = "```lua\nloadstring(game:HttpGet('https://raw.githubusercontent.com/NightFallScript/Unicore/refs/heads/main/DoorsUnicore'))()\n```"
-    embed = create_embed("📜 Universal Script", script)
-    await interaction.response.send_message(embed=embed, ephemeral=True)
+    await interaction.response.send_message(embed=create_embed("📜 Universal Script", script), ephemeral=True)
 
 @bot.tree.command(name="rules", description="Link to rules channel", guild=discord.Object(id=GUILD_ID))
 async def rules(interaction: discord.Interaction):
     channel = bot.get_channel(RULES_CHANNEL_ID)
-    desc = f"📜 Rules are here: {channel.mention}" if channel else "❌ Rules channel not found."
-    embed = create_embed("Rules", desc)
-    await interaction.response.send_message(embed=embed, ephemeral=True)
+    text = f"📜 Rules are here: {channel.mention}" if channel else "❌ Rules channel not found."
+    await interaction.response.send_message(embed=create_embed("Rules", text), ephemeral=True)
 
 @bot.tree.command(name="info", description="Link to info channel", guild=discord.Object(id=GUILD_ID))
 async def info(interaction: discord.Interaction):
     channel = bot.get_channel(INFO_CHANNEL_ID)
-    desc = f"ℹ️ Info is here: {channel.mention}" if channel else "❌ Info channel not found."
-    embed = create_embed("Information", desc)
-    await interaction.response.send_message(embed=embed, ephemeral=True)
+    text = f"ℹ️ Info is here: {channel.mention}" if channel else "❌ Info channel not found."
+    await interaction.response.send_message(embed=create_embed("Information", text), ephemeral=True)
 
 @bot.tree.command(name="support", description="Link to support channel", guild=discord.Object(id=GUILD_ID))
 async def support(interaction: discord.Interaction):
     channel = bot.get_channel(SUPPORT_CHANNEL_ID)
-    desc = f"🛠️ Support is here: {channel.mention}" if channel else "❌ Support channel not found."
-    embed = create_embed("Support", desc)
-    await interaction.response.send_message(embed=embed, ephemeral=True)
+    text = f"🛠️ Support is here: {channel.mention}" if channel else "❌ Support channel not found."
+    await interaction.response.send_message(embed=create_embed("Support", text), ephemeral=True)
 
 @bot.tree.command(name="support_executors", description="Link to executors channel", guild=discord.Object(id=GUILD_ID))
 async def support_executors(interaction: discord.Interaction):
     channel = bot.get_channel(EXECUTORS_CHANNEL_ID)
-    desc = f"⚙️ Executors are here: {channel.mention}" if channel else "❌ Executors channel not found."
-    embed = create_embed("Executors Support", desc)
-    await interaction.response.send_message(embed=embed, ephemeral=True)
+    text = f"⚙️ Executors are here: {channel.mention}" if channel else "❌ Executors channel not found."
+    await interaction.response.send_message(embed=create_embed("Executors", text), ephemeral=True)
 
 @bot.tree.command(name="help", description="List all available commands", guild=discord.Object(id=GUILD_ID))
 async def help_command(interaction: discord.Interaction):
@@ -133,10 +127,10 @@ async def help_command(interaction: discord.Interaction):
     embed.add_field(name="/info", value="Show info channel", inline=False)
     embed.add_field(name="/support", value="Show support channel", inline=False)
     embed.add_field(name="/support_executors", value="Show executors channel", inline=False)
-    embed.add_field(name="/all_admin_comands", value="Show all admin commands (Staff/NexusVision only)", inline=False)
+    embed.add_field(name="/all_admin_comands", value="Show all admin commands", inline=False)
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
-# ================== ADMIN SLASH COMMANDS ==================
+# ================== ADMIN COMMANDS ==================
 @app_commands.checks.has_any_role("Staff Team", "NexusVision Team")
 @bot.tree.command(name="change_vip_role", description="Add or remove VIP role", guild=discord.Object(id=GUILD_ID))
 @app_commands.describe(user="Select user", action="Add or Remove")
@@ -163,52 +157,41 @@ async def change_vip_role(interaction: discord.Interaction, user: discord.Member
 @app_commands.describe(user="Select user", reason="Reason for warning")
 async def warn(interaction: discord.Interaction, user: discord.Member, reason: str):
     warns_data[user.id] = warns_data.get(user.id, 0) + 1
-    total_warns = warns_data[user.id]
-    msg = f"⚠️ {user.mention} warned for: {reason} (Total warns: {total_warns}/3)"
-    await interaction.response.send_message(embed=create_embed("Warning Issued", msg), ephemeral=True)
-    await send_log(f"{interaction.user.mention} warned {user.mention}. Reason: {reason}. Total warns: {total_warns}/3")
+    total = warns_data[user.id]
+    msg = f"⚠️ {user.mention} warned for: {reason} (Total warns: {total}/3)"
+    await interaction.response.send_message(embed=create_embed("Warning", msg), ephemeral=True)
+    await send_log(msg)
 
-    if total_warns >= 3:
+    if total >= 3:
         bans_data[user.id] = 1
         await user.ban(reason="Reached 3/3 warns")
-        await send_log(f"🔨 {user.mention} automatically banned for reaching 3/3 warns")
         warns_data[user.id] = 0
+        await send_log(f"🔨 {user.mention} automatically banned after 3 warns")
 
 @app_commands.checks.has_any_role("Staff Team", "NexusVision Team")
 @bot.tree.command(name="warns_list", description="Show warns of a user", guild=discord.Object(id=GUILD_ID))
 @app_commands.describe(user="Select user")
 async def warns_list(interaction: discord.Interaction, user: discord.Member):
-    total_warns = warns_data.get(user.id, 0)
-    msg = f"⚠️ {user.mention} has {total_warns}/3 warns"
-    await interaction.response.send_message(embed=create_embed("Warns List", msg), ephemeral=True)
+    total = warns_data.get(user.id, 0)
+    await interaction.response.send_message(embed=create_embed("Warns", f"{user.mention} has {total}/3 warns"), ephemeral=True)
 
 @app_commands.checks.has_any_role("Staff Team", "NexusVision Team")
 @bot.tree.command(name="bans_list", description="Show banned users", guild=discord.Object(id=GUILD_ID))
 async def bans_list(interaction: discord.Interaction):
-    banned_users = [f"<@{uid}>: {days} day(s)" for uid, days in bans_data.items()]
-    msg = "\n".join(banned_users) if banned_users else "No banned users."
-    await interaction.response.send_message(embed=create_embed("🔨 Banned Users", msg), ephemeral=True)
+    if not bans_data:
+        msg = "No banned users."
+    else:
+        msg = "\n".join([f"<@{uid}> - {days} day(s)" for uid, days in bans_data.items()])
+    await interaction.response.send_message(embed=create_embed("Banned Users", msg), ephemeral=True)
 
 @app_commands.checks.has_any_role("Staff Team", "NexusVision Team")
 @bot.tree.command(name="mutes_list", description="Show muted users", guild=discord.Object(id=GUILD_ID))
 async def mutes_list(interaction: discord.Interaction):
-    muted_users = [f"<@{uid}>: {days} day(s)" for uid, days in mutes_data.items()]
-    msg = "\n".join(muted_users) if muted_users else "No muted users."
-    await interaction.response.send_message(embed=create_embed("🔇 Muted Users", msg), ephemeral=True)
-
-@app_commands.checks.has_any_role("Staff Team", "NexusVision Team")
-@bot.tree.command(name="all_admin_comands", description="Show all admin commands", guild=discord.Object(id=GUILD_ID))
-async def all_admin_comands(interaction: discord.Interaction):
-    commands_list = [
-        "/change_vip_role",
-        "/warn",
-        "/warns_list",
-        "/bans_list",
-        "/mutes_list",
-        "/setchanel_logs"
-    ]
-    embed = create_embed("🛠️ Admin Commands", "\n".join(commands_list))
-    await interaction.response.send_message(embed=embed, ephemeral=True)
+    if not mutes_data:
+        msg = "No muted users."
+    else:
+        msg = "\n".join([f"<@{uid}> - {days} day(s)" for uid, days in mutes_data.items()])
+    await interaction.response.send_message(embed=create_embed("Muted Users", msg), ephemeral=True)
 
 @app_commands.checks.has_any_role("Staff Team", "NexusVision Team")
 @bot.tree.command(name="setchanel_logs", description="Set log channel", guild=discord.Object(id=GUILD_ID))
@@ -216,9 +199,9 @@ async def all_admin_comands(interaction: discord.Interaction):
 async def setchanel_logs(interaction: discord.Interaction, channel: discord.TextChannel):
     global LOG_CHANNEL_ID
     LOG_CHANNEL_ID = channel.id
-    embed = create_embed("✅ Log Channel Updated", f"Log channel set to {channel.mention}")
-    await interaction.response.send_message(embed=embed, ephemeral=True)
-    await send_log(f"{interaction.user.mention} set the log channel to {channel.mention}")
+    msg = f"✅ Log channel set to {channel.mention}"
+    await interaction.response.send_message(embed=create_embed("Log Channel", msg), ephemeral=True)
+    await send_log(f"{interaction.user.mention} set log channel to {channel.mention}")
 
 # ================== Run ==================
 keep_alive()
