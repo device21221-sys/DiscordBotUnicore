@@ -10,7 +10,7 @@ bot = commands.Bot(command_prefix="?", intents=intents)
 
 # ================== Channel IDs (replace with your real ones) ==================
 RULES_CHANNEL_ID = 1351689723369754634
-INFO_CHANNEL_ID = 1351690459923349634
+INFO_CHANNEL_ID = 1425554175231529054
 SUPPORT_CHANNEL_ID = 1411789053921202286
 EXECUTORS_CHANNEL_ID = 1404173340125429792
 
@@ -19,6 +19,30 @@ EXECUTORS_CHANNEL_ID = 1404173340125429792
 async def on_ready():
     await bot.tree.sync()
     print(f"✅ Bot {bot.user} is online and slash commands synced!")
+
+# ================== Auto-delete and respond to unsupported executors ==================
+@bot.event
+async def on_message(message: discord.Message):
+    if message.author.bot:
+        return
+
+    content = message.content.lower()
+    channel = bot.get_channel(EXECUTORS_CHANNEL_ID)
+
+    responses = {
+        "solara": f"⚠️ Solara is not supported. Go to {channel.mention}",
+        "jjsploit": f"⚠️ JJsploit is not supported. Go to {channel.mention}",
+        "xeno": f"⚠️ Xeno is not supported. Go to {channel.mention}"
+    }
+
+    for word, response in responses.items():
+        if word in content:
+            await message.delete()
+            await message.channel.send(response)
+            return  # щоб не спамити кілька разів, якщо є кілька слів
+
+    # не забуваємо дозволяти іншим командам оброблятись
+    await bot.process_commands(message)
 
 # ================== Slash Commands ==================
 @bot.tree.command(name="get_ar2_script", description="Get the AR2 Script")
@@ -109,3 +133,4 @@ async def scripts(ctx):
 # ================== Run ==================
 keep_alive()
 bot.run(os.getenv("TOKEN"))
+
