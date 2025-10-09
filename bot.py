@@ -22,34 +22,45 @@ async def on_ready():
 
 @bot.event
 async def on_message(message: discord.Message):
+    # Ігноруємо ботів
     if message.author.bot:
-        return  # ігнор ботів
+        return  
 
-    content = message.content.lower()
-    if any(word in content for word in ["solara", "jjsploit", "xeno", "Solara", "Xeno", "JJSploit"]):
+    # Список слів, які треба блокувати
+    blocked_words = ["solara", "Solara", "xeno", "Xeno", "jjsploit", "JJSploit"]
+
+    # Якщо будь-яке з них міститься в повідомленні
+    if any(word in message.content for word in blocked_words):
         try:
             await message.delete()
         except discord.Forbidden:
-            pass  # якщо бот не має прав на видалення
+            pass  # якщо бот не має прав
 
+        # Канал підтримки екзек’юторів
         channel = bot.get_channel(EXECUTORS_CHANNEL_ID)
-        if channel:
-            # Визначаємо яке саме слово і робимо embed
-            if "solara" in content:
-                title = "Solara is not supported!"
-            elif "jjsploit" in content:
-                title = "JJSploit is not supported!"
-            elif "xeno" in content:
-                title = "Xeno is not supported!"
-            else:
-                title = "That executor is not supported!"
 
-            embed = discord.Embed(
-                description=f"**{title}**\nGo to {channel.mention}!",
-                color=0x2b2d31  # темно-сірий стиль, як на скріні
-            )
-            await message.channel.send(embed=embed, delete_after=10)
-    # обов’язково, щоб працювали команди
+        # Визначення конкретного тексту
+        lower_content = message.content.lower()
+        if "solara" in lower_content:
+            name = "Solara"
+        elif "xeno" in lower_content:
+            name = "Xeno"
+        elif "jjsploit" in lower_content:
+            name = "JJSploit"
+        else:
+            name = "Executor"
+
+        # Embed у тому ж стилі, що на скріні
+        embed = discord.Embed(
+            description=f"**⚠️ {name} is not supported!**\n**Go to {channel.mention}!**",
+            color=0xff4b4b  # червоний акцент
+        )
+
+        # Відправлення без дубляжу
+        await message.channel.send(embed=embed, delete_after=10)
+        return  # обриває, щоб уникнути дублювання
+
+    # Це треба, щоб команди працювали
     await bot.process_commands(message)
 
 # ================== Slash Commands ==================
