@@ -45,11 +45,26 @@ async def send_log(message: str):
 async def on_ready():
     guild = discord.Object(id=GUILD_ID)
     try:
-        bot.tree.copy_global_to(guild=guild)
+        print("🧹 Cleaning old commands...")
+        # Видаляємо глобальні команди
+        global_cmds = await bot.tree.fetch_commands()
+        for cmd in global_cmds:
+            await bot.tree.delete_command(cmd.id)
+        print(f"🗑️ Deleted {len(global_cmds)} old global commands")
+
+        # Видаляємо старі команди в гільдії
+        guild_cmds = await bot.tree.fetch_commands(guild=guild)
+        for cmd in guild_cmds:
+            await bot.tree.delete_command(cmd.id, guild=guild)
+        print(f"🧽 Deleted {len(guild_cmds)} old guild commands")
+
+        # Реєструємо лише актуальні команди
         await bot.tree.sync(guild=guild)
-        print(f"✅ Commands synced successfully for guild {GUILD_ID}")
+        print(f"✅ Synced {len(await bot.tree.fetch_commands(guild=guild))} new commands for guild {GUILD_ID}")
+
     except Exception as e:
         print(f"⚠️ Command sync failed: {e}")
+
     print(f"🟢 Bot {bot.user} is online!")
 
 @bot.tree.error
