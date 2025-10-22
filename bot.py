@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 
 # ================== CONFIG ==================
 GUILD_ID = 1344670393092280481  # Your server ID
+ADMIN_ROLES = ["Staff Team", "NexusVision Team"]
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -22,9 +23,6 @@ SUPPORT_CHANNEL_ID = 1411789053921202286
 EXECUTORS_CHANNEL_ID = 1404173340125429792
 STATUS_CHANNEL_ID = None
 LOG_CHANNEL_ID = None
-
-# ================== ROLES ==================
-ADMIN_ROLES = ["Staff Team", "NexusVision Team"]
 
 # ================== DATA ==================
 warns_data = defaultdict(int)
@@ -67,24 +65,28 @@ async def unmute_user(user: discord.Member, reason="No reason provided"):
 # ================== EVENTS ==================
 @bot.event
 async def on_ready():
+    print("Cleaning old commands...")
+
     guild = discord.Object(id=GUILD_ID)
-    try:
-        # ===== Delete old commands =====
-        global_cmds = await bot.tree.fetch_commands()
-        for cmd in global_cmds:
-            await bot.tree.delete_command(cmd.id)
-        guild_cmds = await bot.tree.fetch_commands(guild=guild)
-        for cmd in guild_cmds:
-            await bot.tree.delete_command(cmd.id, guild=guild)
-        print("✅ Old commands deleted")
 
-        # ===== Sync new commands =====
-        await bot.tree.sync(guild=guild)
-        print(f"✅ Commands synced. Bot online as {bot.user}")
+    # ===== Delete global commands =====
+    global_cmds = await bot.tree.fetch_commands()
+    for cmd in global_cmds:
+        await bot.tree.delete_command(cmd.id)
+    print(f"Deleted {len(global_cmds)} global commands")
 
-    except Exception as e:
-        print(f"⚠️ Command sync failed: {e}")
+    # ===== Delete guild commands =====
+    guild_cmds = await bot.tree.fetch_commands(guild=guild)
+    for cmd in guild_cmds:
+        await bot.tree.delete_command(cmd.id, guild=guild)
+    print(f"Deleted {len(guild_cmds)} guild commands")
 
+    # Sync new commands
+    await bot.tree.sync(guild=guild)
+    print("✅ Commands fully cleared and synced")
+    print(f"Bot is online as {bot.user}")
+
+    # Start tasks
     check_mutes.start()
 
 @bot.event
