@@ -3,12 +3,11 @@ from discord import app_commands
 from discord.ext import commands, tasks
 import os
 from keep_alive import keep_alive
-import asyncio
-from collections import defaultdict
 from datetime import datetime, timedelta
+from collections import defaultdict
 
 # ================== CONFIG ==================
-GUILD_ID = 1344670393092280481  # Your server ID
+GUILD_ID = 1344670393092280481
 ADMIN_ROLES = ["Staff Team", "NexusVision Team"]
 
 intents = discord.Intents.default()
@@ -65,28 +64,22 @@ async def unmute_user(user: discord.Member, reason="No reason provided"):
 # ================== EVENTS ==================
 @bot.event
 async def on_ready():
-    print("Cleaning old commands...")
-
     guild = discord.Object(id=GUILD_ID)
 
     # ===== Delete global commands =====
     global_cmds = await bot.tree.fetch_commands()
     for cmd in global_cmds:
         await bot.tree.delete_command(cmd.id)
-    print(f"Deleted {len(global_cmds)} global commands")
 
     # ===== Delete guild commands =====
     guild_cmds = await bot.tree.fetch_commands(guild=guild)
     for cmd in guild_cmds:
         await bot.tree.delete_command(cmd.id, guild=guild)
-    print(f"Deleted {len(guild_cmds)} guild commands")
 
-    # Sync new commands
+    # ===== Sync new commands =====
     await bot.tree.sync(guild=guild)
-    print("✅ Commands fully cleared and synced")
-    print(f"Bot is online as {bot.user}")
+    print(f"✅ Commands cleared and synced. Bot online as {bot.user}")
 
-    # Start tasks
     check_mutes.start()
 
 @bot.event
@@ -94,12 +87,12 @@ async def on_message(message: discord.Message):
     if message.author.bot:
         return
 
-    # Block executors
+    # Executor filter
     blocked_words = ["solara", "xeno", "jjsploit"]
     if any(word.lower() in message.content.lower() for word in blocked_words):
         try:
             await message.delete()
-        except discord.Forbidden:
+        except:
             pass
         await mute_user(message.author, timedelta(hours=1), reason="Executor not supported")
         channel = bot.get_channel(EXECUTORS_CHANNEL_ID)
@@ -107,10 +100,9 @@ async def on_message(message: discord.Message):
         await message.channel.send(f"Executor not supported, please go to {mention}", delete_after=10)
         return
 
-    # Spam detection
+    # Spam filter
     if not hasattr(bot, "user_messages"):
         bot.user_messages = defaultdict(list)
-
     now = datetime.utcnow()
     bot.user_messages[message.author.id].append(now)
     bot.user_messages[message.author.id] = [t for t in bot.user_messages[message.author.id] if now - t < timedelta(seconds=10)]
@@ -125,11 +117,11 @@ async def on_message(message: discord.Message):
 @tasks.loop(seconds=60)
 async def check_mutes():
     now = datetime.utcnow()
-    to_unmute = [user_id for user_id, unmute_time in mutes_data.items() if now >= unmute_time]
+    to_unmute = [user_id for user_id, t in mutes_data.items() if now >= t]
     for user_id in to_unmute:
         user = bot.get_user(user_id)
         if user:
-            await unmute_user(user, reason="Mute duration expired")
+            await unmute_user(user, reason="Mute expired")
 
 # ================== USER COMMANDS ==================
 @bot.tree.command(name="get_script", description="Get the AR2 Script")
@@ -147,49 +139,41 @@ async def get_script(interaction: discord.Interaction):
 async def info(interaction: discord.Interaction):
     channel = bot.get_channel(INFO_CHANNEL_ID)
     if channel:
-        await interaction.response.send_message(f"Info is here: {channel.mention}", ephemeral=True)
+        await interaction.response.send_message(f"Info: {channel.mention}", ephemeral=True)
     else:
-        await interaction.response.send_message("Info channel not found.", ephemeral=True)
+        await interaction.response.send_message("Info channel not found", ephemeral=True)
 
-@bot.tree.command(name="status", description="Show status channel")
-async def status(interaction: discord.Interaction):
-    channel = STATUS_CHANNEL_ID and bot.get_channel(STATUS_CHANNEL_ID)
-    if channel:
-        await interaction.response.send_message(f"Status is here: {channel.mention}", ephemeral=True)
-    else:
-        await interaction.response.send_message("Status channel not set.", ephemeral=True)
-
-@bot.tree.command(name="rules", description="Link to rules channel")
+@bot.tree.command(name="rules", description="Rules channel")
 async def rules(interaction: discord.Interaction):
     channel = bot.get_channel(RULES_CHANNEL_ID)
     if channel:
-        await interaction.response.send_message(f"Rules are here: {channel.mention}", ephemeral=True)
+        await interaction.response.send_message(f"Rules: {channel.mention}", ephemeral=True)
     else:
-        await interaction.response.send_message("Rules channel not found.", ephemeral=True)
+        await interaction.response.send_message("Rules channel not found", ephemeral=True)
 
-@bot.tree.command(name="support", description="Link to support channel")
+@bot.tree.command(name="support", description="Support channel")
 async def support(interaction: discord.Interaction):
     channel = bot.get_channel(SUPPORT_CHANNEL_ID)
     if channel:
-        await interaction.response.send_message(f"Support is here: {channel.mention}", ephemeral=True)
+        await interaction.response.send_message(f"Support: {channel.mention}", ephemeral=True)
     else:
-        await interaction.response.send_message("Support channel not found.", ephemeral=True)
+        await interaction.response.send_message("Support channel not found", ephemeral=True)
 
-@bot.tree.command(name="supported_executors", description="Show supported executors channel")
+@bot.tree.command(name="supported_executors", description="Executors channel")
 async def supported_executors(interaction: discord.Interaction):
     channel = bot.get_channel(EXECUTORS_CHANNEL_ID)
     if channel:
-        await interaction.response.send_message(f"Executors channel: {channel.mention}", ephemeral=True)
+        await interaction.response.send_message(f"Executors: {channel.mention}", ephemeral=True)
     else:
-        await interaction.response.send_message("Executors channel not found.", ephemeral=True)
+        await interaction.response.send_message("Executors channel not found", ephemeral=True)
 
-@bot.tree.command(name="help", description="List all available commands")
+@bot.tree.command(name="help", description="List commands")
 async def help_command(interaction: discord.Interaction):
     embed = create_embed(
         "Command List",
         "**User Commands:**\n"
-        "- /get_script\n- /info\n- /status\n- /rules\n- /support\n- /supported_executors\n"
-        "**Admin Commands (NexusVision Team / Staff Team):**\n"
+        "- /get_script\n- /info\n- /rules\n- /support\n- /supported_executors\n"
+        "**Admin Commands:**\n"
         "- /ban\n- /mute\n- /unmute\n- /warn\n- /unwarn\n- /logs\n- /setupchanellogs\n- /rolegive\n- /kick"
     )
     await interaction.response.send_message(embed=embed, ephemeral=True)
