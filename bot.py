@@ -66,32 +66,30 @@ async def unmute_user(member: discord.Member):
 async def on_ready():
     guild = discord.Object(id=GUILD_ID)
 
-    print("🧹 Deleting ALL commands (global + guild)...")
+    print("🧹 Force deleting ALL commands (global + guild)...")
 
-    # видаляє всі глобальні
+    # видаляємо всі глобальні команди (які лишились ще від UnicoreBot)
     global_cmds = await bot.tree.fetch_commands()
     for cmd in global_cmds:
         try:
             await bot.tree.delete_command(cmd.id)
-            print(f"❌ Deleted global command: {cmd.name}")
+            print(f"❌ Deleted GLOBAL command: {cmd.name}")
         except Exception as e:
-            print(f"⚠️ Failed to delete global command {cmd.name}: {e}")
+            print(f"⚠️ Failed deleting global command {cmd.name}: {e}")
 
-    # видаляє всі серверні
+    # видаляємо всі серверні команди
     guild_cmds = await bot.tree.fetch_commands(guild=guild)
     for cmd in guild_cmds:
         try:
             await bot.tree.delete_command(cmd.id, guild=guild)
-            print(f"❌ Deleted guild command: {cmd.name}")
+            print(f"❌ Deleted GUILD command: {cmd.name}")
         except Exception as e:
-            print(f"⚠️ Failed to delete guild command {cmd.name}: {e}")
+            print(f"⚠️ Failed deleting guild command {cmd.name}: {e}")
 
-    print("✅ All old commands deleted. Syncing new ones...")
-
-    # тепер синхронізуємо нові
+    print("✅ All old commands deleted. Syncing only new NexusVision commands...")
     await bot.tree.sync(guild=guild)
-    print(f"✅ Synced new commands only for guild {GUILD_ID}. Logged in as {bot.user}")
-    
+    print(f"✅ Synced new commands for guild {GUILD_ID}. Logged in as {bot.user}")
+
 # ================== USER COMMANDS ==================
 @bot.tree.command(name="get-script", description="Get the NexusVision script")
 async def get_script(interaction: discord.Interaction):
