@@ -1,6 +1,6 @@
 import discord
 from discord import app_commands
-from discord.ext import commands, tasks
+from discord.ext import commands
 import os
 from datetime import timedelta
 from collections import defaultdict
@@ -49,7 +49,10 @@ async def mute_user(member: discord.Member, duration: timedelta, reason="No reas
 
     await member.add_roles(muted_role, reason=reason)
     mutes_data[member.id] = duration.total_seconds()
-    await member.send(embed=create_embed("Muted", f"You have been muted for {duration}. Reason: {reason}"))
+    try:
+        await member.send(embed=create_embed("Muted", f"You have been muted for {duration}. Reason: {reason}"))
+    except:
+        pass
 
 async def unmute_user(member: discord.Member):
     muted_role = discord.utils.get(member.guild.roles, name="Muted")
@@ -62,8 +65,20 @@ async def unmute_user(member: discord.Member):
 @bot.event
 async def on_ready():
     guild = discord.Object(id=GUILD_ID)
+
+    # ===== Delete old global commands =====
+    global_cmds = await bot.tree.fetch_commands()
+    for cmd in global_cmds:
+        await bot.tree.delete_command(cmd.id)
+
+    # ===== Delete old guild commands =====
+    guild_cmds = await bot.tree.fetch_commands(guild=guild)
+    for cmd in guild_cmds:
+        await bot.tree.delete_command(cmd.id, guild=guild)
+
+    # ===== Sync new commands =====
     await bot.tree.sync(guild=guild)
-    print(f"✅ Synced and ready as {bot.user}")
+    print(f"✅ Commands cleared and synced. Bot online as {bot.user}")
 
 # ================== USER COMMANDS ==================
 @bot.tree.command(name="get-script", description="Get the NexusVision script")
@@ -181,3 +196,4 @@ async def help_command(interaction: discord.Interaction):
 # ================== RUN ==================
 keep_alive()
 bot.run(os.getenv("TOKEN"))
+
