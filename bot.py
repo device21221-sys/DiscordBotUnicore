@@ -21,7 +21,7 @@ RULES_CHANNEL_ID = 1351689723369754634
 INFO_CHANNEL_ID = 1425554175231529054
 SUPPORT_PANEL_ID = 1411789053921202286
 EXECUTORS_CHANNEL_ID = 1404173340125429792
-SCRIPT_PANEL_ID = 1404173340125429792
+SCRIPT_PANEL_ID = 1352959561996173382
 
 # ================== DATA ==================
 warns_data = defaultdict(int)
@@ -66,19 +66,16 @@ async def unmute_user(member: discord.Member):
 async def on_ready():
     guild = discord.Object(id=GUILD_ID)
 
-    # ===== Delete old global commands =====
-    global_cmds = await bot.tree.fetch_commands()
-    for cmd in global_cmds:
+    # ===== FORCE DELETE ALL OLD COMMANDS =====
+    print("🧹 Deleting old slash commands...")
+    for cmd in await bot.tree.fetch_commands():
         await bot.tree.delete_command(cmd.id)
-
-    # ===== Delete old guild commands =====
-    guild_cmds = await bot.tree.fetch_commands(guild=guild)
-    for cmd in guild_cmds:
+    for cmd in await bot.tree.fetch_commands(guild=guild):
         await bot.tree.delete_command(cmd.id, guild=guild)
 
-    # ===== Sync new commands =====
+    # ===== SYNC NEW COMMANDS =====
     await bot.tree.sync(guild=guild)
-    print(f"✅ Commands cleared and synced. Bot online as {bot.user}")
+    print(f"✅ All old commands deleted and new synced. Logged in as {bot.user}")
 
 # ================== USER COMMANDS ==================
 @bot.tree.command(name="get-script", description="Get the NexusVision script")
@@ -196,4 +193,3 @@ async def help_command(interaction: discord.Interaction):
 # ================== RUN ==================
 keep_alive()
 bot.run(os.getenv("TOKEN"))
-
