@@ -66,17 +66,32 @@ async def unmute_user(member: discord.Member):
 async def on_ready():
     guild = discord.Object(id=GUILD_ID)
 
-    # ===== FORCE DELETE ALL OLD COMMANDS =====
-    print("🧹 Deleting old slash commands...")
-    for cmd in await bot.tree.fetch_commands():
-        await bot.tree.delete_command(cmd.id)
-    for cmd in await bot.tree.fetch_commands(guild=guild):
-        await bot.tree.delete_command(cmd.id, guild=guild)
+    print("🧹 Deleting ALL commands (global + guild)...")
 
-    # ===== SYNC NEW COMMANDS =====
+    # видаляє всі глобальні
+    global_cmds = await bot.tree.fetch_commands()
+    for cmd in global_cmds:
+        try:
+            await bot.tree.delete_command(cmd.id)
+            print(f"❌ Deleted global command: {cmd.name}")
+        except Exception as e:
+            print(f"⚠️ Failed to delete global command {cmd.name}: {e}")
+
+    # видаляє всі серверні
+    guild_cmds = await bot.tree.fetch_commands(guild=guild)
+    for cmd in guild_cmds:
+        try:
+            await bot.tree.delete_command(cmd.id, guild=guild)
+            print(f"❌ Deleted guild command: {cmd.name}")
+        except Exception as e:
+            print(f"⚠️ Failed to delete guild command {cmd.name}: {e}")
+
+    print("✅ All old commands deleted. Syncing new ones...")
+
+    # тепер синхронізуємо нові
     await bot.tree.sync(guild=guild)
-    print(f"✅ All old commands deleted and new synced. Logged in as {bot.user}")
-
+    print(f"✅ Synced new commands only for guild {GUILD_ID}. Logged in as {bot.user}")
+    
 # ================== USER COMMANDS ==================
 @bot.tree.command(name="get-script", description="Get the NexusVision script")
 async def get_script(interaction: discord.Interaction):
