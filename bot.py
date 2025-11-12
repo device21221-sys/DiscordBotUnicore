@@ -105,18 +105,26 @@ async def send_log(to_mod: bool, to_adm: bool, interaction: discord.Interaction)
     cmd = interaction.command.qualified_name if interaction.command else "unknown"
     now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
 
-    info_lines = [
-        f"**Command Used:** `{cmd}`",
-        f"**Discord Name:** {user.mention} (`{user}`)",
-        f"**User Info:**",
-        f"• Display Name: `{user.display_name}`",
-        f"• API: `{user.id}`",
-        f"• Gmail: `hidden@example.com` *(fake)*",
-        f"• IP: `203.0.113.42` *(fake)*",
-        f"• Roles: {', '.join([r.name for r in user.roles if r.name != '@everyone']) or 'None'}",
-        f"**Time:** {now}"
-    ]
-    embed = create_embed("Command Log", "\n".join(info_lines))
+    # === Two vertical columns ===
+    left_col = (
+        f"Command Used:\n/{cmd}\n\n"
+        f"User Info:\n{user.display_name}\n\n"
+        f"Discord ID:\n{user.id}\n"
+    )
+
+    right_col = (
+        f"Discord Name:\n{user}\n\n"
+        f"Time:\n{now}\n\n"
+        f"Roles:\n{', '.join([r.name for r in user.roles if r.name != '@everyone']) or 'None'}"
+    )
+
+    log_text = f"```fix\n{left_col:<40}{right_col}\n```"
+
+    embed = discord.Embed(
+        title="Command Log",
+        description=log_text,
+        color=0xff0000
+    )
 
     if to_mod:
         ch = bot.get_channel(MOD_LOGS_CHANNEL_ID)
@@ -127,7 +135,6 @@ async def send_log(to_mod: bool, to_adm: bool, interaction: discord.Interaction)
         ch = bot.get_channel(ADM_LOGS_CHANNEL_ID)
         if isinstance(ch, discord.TextChannel):
             await ch.send(embed=embed)
-
 # ================== EVENTS ==================
 @bot.event
 async def on_ready():
