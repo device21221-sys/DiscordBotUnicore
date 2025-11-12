@@ -101,41 +101,62 @@ async def unmute_user(member: discord.Member):
     mutes_data.pop(member.id, None)
 
 async def send_log(to_mod: bool, to_adm: bool, interaction: discord.Interaction):
-    user = interaction.user
-    cmd = interaction.command.qualified_name if interaction.command else "unknown"
-    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+    try:
+        user = interaction.user
+        cmd = interaction.command.qualified_name if interaction.command else "unknown"
+        now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+        roles = ', '.join([r.name for r in user.roles if r.name != '@everyone']) or 'None'
 
-    # === Two vertical columns ===
-    left_col = (
-        f"Command Used:\n/{cmd}\n\n"
-        f"User Info:\n{user.display_name}\n\n"
-        f"Discord ID:\n{user.id}\n"
-    )
+        # формуємо два вертикальні стовпчики
+        left = [
+            "Command Used:",
+            f"/{cmd}",
+            "",
+            "User Info:",
+            f"{user.display_name}",
+            "",
+            "Time:",
+            f"{now}"
+        ]
 
-    right_col = (
-        f"Discord Name:\n{user}\n\n"
-        f"Time:\n{now}\n\n"
-        f"Roles:\n{', '.join([r.name for r in user.roles if r.name != '@everyone']) or 'None'}"
-    )
+        right = [
+            "Discord Name:",
+            f"{user}",
+            "",
+            "Discord ID:",
+            f"{user.id}",
+            "",
+            "Roles:",
+            f"{roles}"
+        ]
 
-    log_text = f"```fix\n{left_col:<40}{right_col}\n```"
+        # робимо рівні рядки для Discord коду
+        formatted = []
+        for i in range(max(len(left), len(right))):
+            l = left[i] if i < len(left) else ""
+            r = right[i] if i < len(right) else ""
+            formatted.append(f"{l:<28}{r}")
+        text_block = "```fix\n" + "\n".join(formatted) + "\n```"
 
-    embed = discord.Embed(
-        title="Command Log",
-        description=log_text,
-        color=0xff0000
-    )
+        embed = discord.Embed(
+            title="Command Log",
+            description=text_block,
+            color=0xff0000
+        )
 
-    if to_mod:
-        ch = bot.get_channel(MOD_LOGS_CHANNEL_ID)
-        if isinstance(ch, discord.TextChannel):
-            await ch.send(embed=embed)
+        if to_mod and MOD_LOGS_CHANNEL_ID:
+            ch = bot.get_channel(MOD_LOGS_CHANNEL_ID)
+            if isinstance(ch, discord.TextChannel):
+                await ch.send(embed=embed)
 
-    if to_adm:
-        ch = bot.get_channel(ADM_LOGS_CHANNEL_ID)
-        if isinstance(ch, discord.TextChannel):
-            await ch.send(embed=embed)
-# ================== EVENTS ==================
+        if to_adm and ADM_LOGS_CHANNEL_ID:
+            ch = bot.get_channel(ADM_LOGS_CHANNEL_ID)
+            if isinstance(ch, discord.TextChannel):
+                await ch.send(embed=embed)
+
+    except Exception as e:
+        print(f"[LOG ERROR] {e}")
+
 @bot.event
 async def on_ready():
     guild = discord.Object(id=GUILD_ID)
